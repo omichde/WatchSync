@@ -22,5 +22,4 @@ Pod::Spec.new do |s|
   s.swift_version = "4.2"
 
   s.framework  = "WatchConnectivity"
-  s.dependency 'GzipSwift'
 end

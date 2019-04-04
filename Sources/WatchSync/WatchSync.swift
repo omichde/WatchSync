@@ -8,7 +8,6 @@
 
 import Foundation
 import WatchConnectivity
-import Gzip
 
 public struct CouldNotActivateError: Error {
 }
@@ -148,16 +147,8 @@ open class WatchSync: NSObject {
             return
         }
 
-        let optimizedData: Data
-        do {
-            optimizedData = try messageData.gzipped(level: .bestCompression)
-        } catch let error {
-            completion?(.failure(.unableToCompressMessage(error)))
-            return
-        }
-
         let data: [String: String] = [
-            type(of: message).messageKey: optimizedData.base64EncodedString()
+            type(of: message).messageKey: messageData.base64EncodedString()
         ]
         sendMessage(data, completion: completion)
     }
@@ -345,20 +336,9 @@ open class WatchSync: NSObject {
                 continue
             }
 
-            let decompressedData: Data
-            if messageData.isGzipped {
-                do {
-                    decompressedData = try messageData.gunzipped()
-                } catch {
-                    continue
-                }
-            } else {
-                decompressedData = messageData
-            }
-
             let watchSyncableMessage: SyncableMessage
             do {
-                watchSyncableMessage = try messageType.fromJSONData(decompressedData)
+                watchSyncableMessage = try messageType.fromJSONData(messageData)
                 foundMessage = true
             } catch let error {
                 logMessage("Unable to parse JSON \(error.localizedDescription)")
